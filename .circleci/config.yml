@@ -1,0 +1,175 @@
+version: 2.1
+
+executors:
+  default:
+    docker:
+      - image: cimg/node:14.18.0
+    working_directory: ~/project
+
+commands:
+  attach_project:
+    steps:
+      - attach_workspace:
+          at: ~/project
+  npm-setup:
+    parameters:
+      folder:
+        default: '~/project'
+        type: string
+    steps:
+      - run:
+          name: Login into GemFury
+          command: echo "//npm.fury.io/syngenta-digital/:_authToken=${FURY_AUTH}" > <<parameters.folder>>/.npmrc
+      - run:
+          name: config npm Registry
+          command: npm config set @package-reactnative:registry https://npm.fury.io/syngenta-digital/
+      - run:
+          name: config npm Registry
+          command: |
+            npm config set @package-react:registry https://npm.fury.io/syngenta-digital/
+            ls -la
+            cat <<parameters.folder>>/.npmrc
+
+jobs:
+  install-dependencies:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - npm-setup:
+          folder: '~/project'
+      - restore_cache:
+          keys:
+            - dependencies-{{ checksum "package.json" }}
+            - dependencies-
+      - restore_cache:
+          keys:
+            - dependencies-example-{{ checksum "example/package.json" }}
+            - dependencies-example-
+      - run:
+          name: Install dependencies
+          command: npm i
+      - save_cache:
+          key: dependencies-{{ checksum "package.json" }}
+          paths: node_modules
+      - save_cache:
+          key: dependencies-example-{{ checksum "example/package.json" }}
+          paths: example/node_modules
+      - persist_to_workspace:
+          root: .
+          paths: .
+
+  lint:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - run:
+          env:
+            GITHUB_TOKEN: ${GITHUB_TOKEN_RELEASE}
+          name: Lint files
+          command: |
+            yarn lint
+
+  typescript:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - run:
+          name: Typecheck files
+          command: |
+            yarn typescript
+
+  unit-tests:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - npm-setup:
+          folder: '~/project'
+      - run:
+          name: Run unit tests
+          command: |
+            yarn test --coverage
+      - store_artifacts:
+          path: coverage
+          destination: coverage
+
+  increase_version:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - npm-setup:
+          folder: '~/project'
+      - run:
+          env:
+            GITHUB_TOKEN: ${GITHUB_TOKEN_RELEASE}
+          name: Build package
+          command: |
+            git push --set-upstream origin $(echo "<< pipeline.git.branch >>")
+            git pull origin
+            git config user.name circleCI
+            git config user.email bot@circleci.com
+            npm run release 
+            git add .
+            git commit -m "ci: [ci skip] new package version"
+            git pull origin
+            git push --follow-tags
+      - persist_to_workspace:
+          root: .
+          paths: .
+  build-package:
+    executor: default
+    steps:
+      - checkout
+      - attach_project
+      - run:
+          name: Build package
+          command: |
+            npm run pre-pack
+            curl -F package=@"$(echo package-reactnative-recaptcha-ghx*.tgz)" https://${FURY_PUSH_TOKEN}@push.fury.io/syngenta-digital/
+workflows:
+  build-and-test:
+    jobs:
+      - install-dependencies:
+          context:
+            - shared-gemfury-tokens
+      - lint:
+          requires:
+            - install-dependencies
+      - typescript:
+          requires:
+            - install-dependencies
+          filters:
+            tags:
+              ignore: /.*/
+      - unit-tests:
+          requires:
+            - install-dependencies
+      - increase_version:
+          requires:
+            - install-dependencies
+            - lint
+            - unit-tests
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - develop
+      - build-package:
+          context:
+            - shared-gemfury-tokens
+          requires:
+            - install-dependencies
+            - lint
+            - increase_version
+            - unit-tests
+          filters:
+            tags:
+              ignore: /.*/
+            branches:
+              only:
+                - develop

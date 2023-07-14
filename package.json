@@ -1,5 +1,5 @@
 {
-  "name": "react-native-recaptcha-that-works",
+  "name": "@package-reactnative/recaptcha",
   "displayName": "React-Native reCAPTCHA That Works",
   "version": "1.3.2",
   "private": false,
@@ -17,6 +17,9 @@
     "android",
     "recaptcha"
   ],
+  "scripts": {
+    "pre-pack": "BRANDS=ghx node ./scripts/build.js"
+  },
   "author": {
     "name": "Douglas Nassif Roma Junior",
     "email": "nassifrroma@gmail.com",
@@ -30,5 +33,6 @@
     "react": ">=16.9.0",
     "react-native": ">=0.60.0",
     "react-native-webview": ">=10.0.0"
-  }
+  },
+  "brandId": "ghx"
 }
