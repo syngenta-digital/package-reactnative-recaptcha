@@ -238,7 +238,7 @@ const Recaptcha = forwardRef(
     );
 
     return renderWithoutModal ? (
-      <View></View>
+      <View>{renderCaptchaComponent()}</View>
     ) : (
       <Modal
         transparent
