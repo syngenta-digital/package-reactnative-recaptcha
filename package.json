@@ -18,7 +18,8 @@
     "recaptcha"
   ],
   "scripts": {
-    "pre-pack": "BRANDS=ghx node ./scripts/build.js"
+    "pre-pack": "BRANDS=ghx node ./scripts/build.js",
+    "release": "standard-version --skip.commit"
   },
   "author": {
     "name": "Douglas Nassif Roma Junior",
@@ -27,6 +28,9 @@
   },
   "bugs": {
     "url": "https://github.com/douglasjunior/react-native-recaptcha-that-works/issues"
+  },
+  "devDependencies": {
+    "standard-version": "9.3.1"
   },
   "homepage": "https://github.com/douglasjunior/react-native-recaptcha-that-works",
   "peerDependencies": {
