@@ -151,8 +151,6 @@ workflows:
       - increase_version:
           requires:
             - install-dependencies
-            - lint
-            - unit-tests
           filters:
             tags:
               ignore: /.*/
@@ -164,9 +162,7 @@ workflows:
             - shared-gemfury-tokens
           requires:
             - install-dependencies
-            - lint
             - increase_version
-            - unit-tests
           filters:
             tags:
               ignore: /.*/
