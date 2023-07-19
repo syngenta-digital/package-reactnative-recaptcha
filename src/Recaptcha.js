@@ -1,227 +1,260 @@
 /**
-* MIT License
-*
-* Copyright (c) 2020 Douglas Nassif Roma Junior
-*
-* Permission is hereby granted, free of charge, to any person obtaining a copy
-* of this software and associated documentation files (the "Software"), to deal
-* in the Software without restriction, including without limitation the rights
-* to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-* copies of the Software, and to permit persons to whom the Software is
-* furnished to do so, subject to the following conditions:
-*
-* The above copyright notice and this permission notice shall be included in all
-* copies or substantial portions of the Software.
-*
-* THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-* IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-* FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-* AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-* LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-* OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-* SOFTWARE.
-*/
+ * MIT License
+ *
+ * Copyright (c) 2020 Douglas Nassif Roma Junior
+ *
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ *
+ * The above copyright notice and this permission notice shall be included in all
+ * copies or substantial portions of the Software.
+ *
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE.
+ */
 
 import React, {
-    forwardRef,
-    useMemo,
-    useState,
-    useCallback,
-    useRef,
-    useImperativeHandle,
-} from 'react';
-import {
-    Modal,
-    StyleSheet,
-    ActivityIndicator,
-    View,
-} from 'react-native';
+  forwardRef,
+  useMemo,
+  useState,
+  useCallback,
+  useRef,
+  useImperativeHandle,
+} from "react";
+import { Modal, StyleSheet, ActivityIndicator, View } from "react-native";
 
-import WebView from 'react-native-webview';
-import getTemplate from './get-template';
+import WebView from "react-native-webview";
+import getTemplate from "./get-template";
 
 const styles = StyleSheet.create({
-    webView: {
-        flex: 1,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    },
-    loadingContainer: {
-        position: 'absolute',
-        top: 0,
-        left: 0,
-        bottom: 0,
-        right: 0,
-        justifyContent: 'center',
-        alignItems: 'center',
-    },
+  webView: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+  },
+  loadingContainer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    bottom: 0,
+    right: 0,
+    justifyContent: "center",
+    alignItems: "center",
+  },
 });
 
-const originWhitelist = ['*'];
+const originWhitelist = ["*"];
 
-const Recaptcha = forwardRef(({
-    headerComponent,
-    footerComponent,
-    loadingComponent,
-    webViewProps,
-    modalProps,
-    onVerify,
-    onExpire,
-    onError,
-    onClose,
-    onLoad,
-    theme,
-    size,
-    siteKey,
-    baseUrl,
-    lang,
-    style,
-    enterprise,
-    recaptchaDomain,
-    gstaticDomain,
-    hideBadge,
-    action,
-}, $ref,
-) => {
+const Recaptcha = forwardRef(
+  (
+    {
+      headerComponent,
+      footerComponent,
+      loadingComponent,
+      webViewProps,
+      modalProps,
+      onVerify,
+      onExpire,
+      onError,
+      onClose,
+      onLoad,
+      theme,
+      size,
+      siteKey,
+      baseUrl,
+      lang,
+      style,
+      enterprise,
+      recaptchaDomain,
+      gstaticDomain,
+      hideBadge,
+      action,
+      renderWithoutModal,
+    },
+    $ref
+  ) => {
     const $isClosed = useRef(true);
     const $webView = useRef();
     const [visible, setVisible] = useState(false);
     const [loading, setLoading] = useState(true);
 
-    const isInvisibleSize = size === 'invisible';
+    const isInvisibleSize = size === "invisible";
 
     const html = useMemo(() => {
-        return getTemplate(
-            {
-                siteKey,
-                size,
-                theme,
-                lang,
-                action,
-            },
-            enterprise,
-            recaptchaDomain,
-            gstaticDomain,
-            hideBadge,
-        );
-    }, [siteKey, size, theme, lang, enterprise, recaptchaDomain, gstaticDomain, hideBadge]);
+      return getTemplate(
+        {
+          siteKey,
+          size,
+          theme,
+          lang,
+          action,
+        },
+        enterprise,
+        recaptchaDomain,
+        gstaticDomain,
+        hideBadge
+      );
+    }, [
+      siteKey,
+      size,
+      theme,
+      lang,
+      enterprise,
+      recaptchaDomain,
+      gstaticDomain,
+      hideBadge,
+    ]);
 
-    const handleLoad = useCallback((...args) => {
+    const handleLoad = useCallback(
+      (...args) => {
         onLoad && onLoad(...args);
 
         if (isInvisibleSize) {
-            $webView.current.injectJavaScript(`
+          $webView.current.injectJavaScript(`
                 window.rnRecaptcha.execute();
             `);
         }
 
         setLoading(false);
-    }, [onLoad, isInvisibleSize]);
+      },
+      [onLoad, isInvisibleSize]
+    );
 
-    const handleClose = useCallback((...args) => {
+    const handleClose = useCallback(
+      (...args) => {
         if ($isClosed.current) {
-            return;
+          return;
         }
         $isClosed.current = true;
         setVisible(false);
         onClose && onClose(...args);
-    }, [onClose]);
+      },
+      [onClose]
+    );
 
-    const handleMessage = useCallback((content) => {
+    const handleMessage = useCallback(
+      (content) => {
         try {
-            const payload = JSON.parse(content.nativeEvent.data);
-            if (payload.close && isInvisibleSize) {
-                handleClose();
-            }
-            if (payload.load) {
-                handleLoad(...payload.load);
-            }
-            if (payload.expire) {
-                onExpire && onExpire(...payload.expire);
-            }
-            if (payload.error) {
-                handleClose();
-                onError && onError(...payload.error);
-            }
-            if (payload.verify) {
-                handleClose();
-                onVerify && onVerify(...payload.verify);
-            }
+          const payload = JSON.parse(content.nativeEvent.data);
+          if (payload.close && isInvisibleSize) {
+            handleClose();
+          }
+          if (payload.load) {
+            handleLoad(...payload.load);
+          }
+          if (payload.expire) {
+            onExpire && onExpire(...payload.expire);
+          }
+          if (payload.error) {
+            handleClose();
+            onError && onError(...payload.error);
+          }
+          if (payload.verify) {
+            handleClose();
+            onVerify && onVerify(...payload.verify);
+          }
         } catch (err) {
-            console.warn(err);
+          console.warn(err);
         }
-    }, [onVerify, onExpire, onError, handleClose, handleLoad, isInvisibleSize]);
+      },
+      [onVerify, onExpire, onError, handleClose, handleLoad, isInvisibleSize]
+    );
 
-    const source = useMemo(() => ({
+    const source = useMemo(
+      () => ({
         html,
         baseUrl,
-    }), [html, baseUrl]);
+      }),
+      [html, baseUrl]
+    );
 
-    useImperativeHandle($ref, () => ({
+    useImperativeHandle(
+      $ref,
+      () => ({
         open: () => {
-            setVisible(true);
-            setLoading(true);
-            $isClosed.current = false;
+          setVisible(true);
+          setLoading(true);
+          $isClosed.current = false;
         },
         close: handleClose,
-    }), [handleClose]);
+      }),
+      [handleClose]
+    );
 
     const handleNavigationStateChange = useCallback(() => {
-        // prevent navigation on Android
-        if (!loading) {
-            $webView.current.stopLoading();
-        }
+      // prevent navigation on Android
+      if (!loading) {
+        $webView.current.stopLoading();
+      }
     }, [loading]);
 
-    const handleShouldStartLoadWithRequest = useCallback(event => {
+    const handleShouldStartLoadWithRequest = useCallback(
+      (event) => {
         // prevent navigation on iOS
-        return event.navigationType === 'other';
-    }, [loading]);
+        return event.navigationType === "other";
+      },
+      [loading]
+    );
 
-    const webViewStyles = useMemo(() => [
-        styles.webView,
-        style,
-    ], [style]);
+    const webViewStyles = useMemo(() => [styles.webView, style], [style]);
 
     const renderLoading = () => {
-        if (!loading && source) {
-            return null;
-        }
-        return (
-            <View style={styles.loadingContainer}>
-                {loadingComponent || <ActivityIndicator size="large" />}
-            </View>
-        );
+      if (!loading && source) {
+        return null;
+      }
+      return (
+        <View style={styles.loadingContainer}>
+          {loadingComponent || <ActivityIndicator size="large" />}
+        </View>
+      );
     };
 
-    return (
-        <Modal
-            transparent
-            {...modalProps}
-            visible={visible}
-            onRequestClose={handleClose}
-        >
-            {headerComponent}
-            <WebView
-                bounces={false}
-                allowsBackForwardNavigationGestures={false}
-                originWhitelist={originWhitelist}
-                onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
-                onNavigationStateChange={handleNavigationStateChange}
-                {...webViewProps}
-                source={source}
-                style={webViewStyles}
-                onMessage={handleMessage}
-                ref={$webView}
-            />
-            {footerComponent}
-            {renderLoading()}
-        </Modal>
+    const renderCaptchaComponent = () => (
+      <View>
+        {headerComponent}
+        <WebView
+          bounces={false}
+          allowsBackForwardNavigationGestures={false}
+          originWhitelist={originWhitelist}
+          onShouldStartLoadWithRequest={handleShouldStartLoadWithRequest}
+          onNavigationStateChange={handleNavigationStateChange}
+          {...webViewProps}
+          source={source}
+          style={webViewStyles}
+          onMessage={handleMessage}
+          ref={$webView}
+        />
+        {footerComponent}
+        {renderLoading()}
+      </View>
     );
-});
+
+    return renderWithoutModal ? (
+      <View>{renderCaptchaComponent()}</View>
+    ) : (
+      <Modal
+        transparent
+        {...modalProps}
+        visible={visible}
+        onRequestClose={handleClose}
+      >
+        {renderCaptchaComponent()}
+      </Modal>
+    );
+  }
+);
 
 Recaptcha.defaultProps = {
-    size: 'normal',
-    theme: 'light',
+  size: "normal",
+  theme: "light",
 };
 
 export default Recaptcha;

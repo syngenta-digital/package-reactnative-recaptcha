@@ -27,36 +27,37 @@ import { StyleProp, ViewStyle, ModalProps } from "react-native";
 import { WebViewProps } from "react-native-webview";
 
 export declare type RecaptchaProps = {
-    headerComponent?: ReactNode;
-    footerComponent?: ReactNode;
-    loadingComponent?: ReactNode;
-    webViewProps?: Omit<WebViewProps, 'source' | 'style' | 'onMessage' | 'ref'>;
-    modalProps?: Omit<ModalProps, 'visible' | 'onRequestClose'>;
-    onVerify: (token: string) => void;
-    onExpire?: () => void;
-    onError?: (error: string) => void;
-    onClose?: () => void;
-    onLoad?: () => void;
-    theme?: "dark" | "light";
-    size?: "invisible" | "normal" | "compact";
-    siteKey: string;
-    baseUrl: string;
-    lang?: string;
-    style?: StyleProp<ViewStyle>;
-    enterprise?: boolean;
-    recaptchaDomain?: string;
-    gstaticDomain?: string;
-    hideBadge?: boolean;
-    action?: string;
+  headerComponent?: ReactNode;
+  footerComponent?: ReactNode;
+  loadingComponent?: ReactNode;
+  webViewProps?: Omit<WebViewProps, "source" | "style" | "onMessage" | "ref">;
+  modalProps?: Omit<ModalProps, "visible" | "onRequestClose">;
+  onVerify: (token: string) => void;
+  onExpire?: () => void;
+  onError?: (error: string) => void;
+  onClose?: () => void;
+  onLoad?: () => void;
+  theme?: "dark" | "light";
+  size?: "invisible" | "normal" | "compact";
+  siteKey: string;
+  baseUrl: string;
+  lang?: string;
+  style?: StyleProp<ViewStyle>;
+  enterprise?: boolean;
+  recaptchaDomain?: string;
+  gstaticDomain?: string;
+  hideBadge?: boolean;
+  action?: string;
+  renderWithoutModal?: boolean;
 };
 
 export declare type RecaptchaHandles = {
-    open(): void;
-    close(): void;
+  open(): void;
+  close(): void;
 };
 
 declare const Recaptcha: React.ForwardRefExoticComponent<
-    RecaptchaProps & React.RefAttributes<RecaptchaHandles>
+  RecaptchaProps & React.RefAttributes<RecaptchaHandles>
 >;
 
 export default Recaptcha;
