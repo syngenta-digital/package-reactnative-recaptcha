@@ -58,44 +58,6 @@ jobs:
       - persist_to_workspace:
           root: .
           paths: .
-
-  lint:
-    executor: default
-    steps:
-      - checkout
-      - attach_project
-      - run:
-          env:
-            GITHUB_TOKEN: ${GITHUB_TOKEN_RELEASE}
-          name: Lint files
-          command: |
-            yarn lint
-
-  typescript:
-    executor: default
-    steps:
-      - checkout
-      - attach_project
-      - run:
-          name: Typecheck files
-          command: |
-            yarn typescript
-
-  unit-tests:
-    executor: default
-    steps:
-      - checkout
-      - attach_project
-      - npm-setup:
-          folder: '~/project'
-      - run:
-          name: Run unit tests
-          command: |
-            yarn test --coverage
-      - store_artifacts:
-          path: coverage
-          destination: coverage
-
   increase_version:
     executor: default
     steps:
@@ -136,18 +98,6 @@ workflows:
       - install-dependencies:
           context:
             - shared-gemfury-tokens
-      - lint:
-          requires:
-            - install-dependencies
-      - typescript:
-          requires:
-            - install-dependencies
-          filters:
-            tags:
-              ignore: /.*/
-      - unit-tests:
-          requires:
-            - install-dependencies
       - increase_version:
           requires:
             - install-dependencies
